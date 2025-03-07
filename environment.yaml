@@ -1,0 +1,6 @@
+name: salep_ITS_detection_env
+channels:
+  - bioconda
+dependencies:
+  - snakemake
+  - conda

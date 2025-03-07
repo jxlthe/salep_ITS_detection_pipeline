@@ -1,0 +1,77 @@
+#Pipeline to detect salep ITS sequences from Oxford Nanopore Reads
+#This is a three step workflow
+#    1. Basecalling from fast5 or pod5 files to fastq files (This step can be skipped when fastq files are already calculated) [epi2me-labs/wf-basecalling]
+#    2. Demultiplexing the sequences. A custom barcode file (FASTA and Arrangement File) has to be made and put into this workflow. [dorado]
+#    3. Mapping and Counting of ITS sequences and assigning them to a species. [epi2me-labs/wf-metagenomics]
+
+configfile: "../cfg/config.yaml"
+
+rule all:
+    input:
+        "results/metagenomics/wf-metagenomics-report.html"
+    shell:
+        "mv .nextflow.log* results/ && "
+        "cp -r ../cfg results/"
+ #folder clean up to have everything nicely packaged in results folder
+
+
+rule basecall:
+    input: config["pod5_input"]
+    output:
+        "results/fastq/SAMPLE.pass.fq.gz"
+    params:
+        basecaller_model=config["basecaller_model"],
+        qscore_filter=config["qscore_filter"]
+    conda: "conda_env.yaml"
+    shell:
+        "mkdir -p results && "
+        "mkdir -p results/fastq && "
+        "nextflow run epi2me-labs/wf-basecalling "
+        "--input {input} "
+        "--out_dir results/fastq "
+        "--output_fmt fastq "
+        "--qscore_filter {params.qscore_filter} "
+        "--basecaller_cfg {params.basecaller_model}"
+        "--cuda_device auto "
+        "-profile singularity"
+
+rule demux:
+    input: "results/fastq/SAMPLE.pass.fq.gz"
+    output: "results/demux/barcoding_summary.txt"
+    conda: "conda_env.yaml"
+    shell:
+        "mkdir -p results/demux && "
+        "singularity run docker://nanoporetech/dorado dorado demux "
+        "--barcode-arrangement ../cfg/barcodes_arrangement.toml " #custom barcode files
+        "--barcode-sequences ../cfg/barcodes.fasta "
+        "--sample-sheet ../cfg/sample_sheet.csv "
+        "--kit-name \"SALEPBC\" " # don't change this name
+        "--output-dir results/demux "
+        "--emit-summary "
+        "{input} && "
+        "cd results/demux && " #create a folder for each sample and place the fastq in it
+        "for f in ./*bam; "
+        "do "
+        "t=${{f%.*}} && "
+        "T=${{t#*_}} && "
+        "mkdir \"$T\" && "
+        "mv \"$f\" \"$T\"; "
+        "done && "
+        "cd ../.."
+
+rule metagenomics:
+    input: "results/demux/barcoding_summary.txt" 
+    output: "results/metagenomics/wf-metagenomics-report.html"
+    conda: "conda_env.yaml"
+    shell:
+        "mkdir -p results/metagenomics && "
+        "nextflow run epi2me-labs/wf-metagenomics "
+        "--bam ./results/demux "
+        "--out_dir ./results/metagenomics "
+        "--classifier minimap2 " # use minimap and custom reference database
+        "--reference ./references/Orchids_NCBI_PLANiTS_ITS_matched_to_ref_O_N_P.fasta "
+        "--ref2taxid ./references/ref2taxid.O_N_P.tsv "
+        "--taxonomy ./references/new_taxdump.tar.gz "
+        "--include_read_assignments "
+        "-profile singularity "
+

@@ -1,0 +1,7 @@
+experiment_id,kit,flow_cell_id,alias,barcode
+1,SALEPBC,1,MB101,barcode01
+1,SALEPBC,1,MB102,barcode02
+1,SALEPBC,1,MB103,barcode03
+1,SALEPBC,1,MB104,barcode04
+1,SALEPBC,1,MB105,barcode05
+1,SALEPBC,1,MB117,barcode11

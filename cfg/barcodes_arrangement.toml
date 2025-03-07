@@ -1,0 +1,14 @@
+#If you don't know, only edit mask1_front, mask1_rear and last_index. Look in the README.md for help
+[arrangement]
+name = "SALEPBC"
+kit = "SALEPBC"
+
+#specify the reads flanking the barcode
+mask1_front = ""
+mask1_rear = "GGAAGTAAAAGTCGTAACAAGG"
+
+barcode1_pattern = "SALEP_BC%02i"
+first_index = 1
+#set the total number of barcodes
+last_index = 11
+rear_only_barcodes = false
