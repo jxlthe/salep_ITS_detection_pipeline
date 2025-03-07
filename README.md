@@ -52,3 +52,6 @@ NNNNNNNN
 7. Run the pipeline by executing the run_salep_ITS_detection_pipeline.sh
 8. After a while your results should be in snakemake_workflow/results
 9. To reset the Pipeline for another analysis run simply remove the results folder completely or move it somewhere else. Edit the configuration files accordingly for the next run.
+
+# Reference Databse for Metagenomic Analysis
+The reference is the combination of multiple Orchid ITS sequences, a NCBI database combining archaeal, bacterial and fungal ITS sequences (https://www.ncbi.nlm.nih.gov/refseq/targetedloci/) and Plant ITS sequence data base PLANiTS (https://academic.oup.com/database/article/doi/10.1093/database/baz155/5722079)
