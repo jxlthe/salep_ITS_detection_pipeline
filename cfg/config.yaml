@@ -1,13 +1,14 @@
 #Input Data from Nanopore Sequencer: pod5 format
 #specify the path to a directory (in "") in which your .pod5 files are stored
-pod5_input: "/data/home/the/experiments/EX_THE000016/pod5_Gutachten2"
+pod5_input: "/PATH/TO/YOUR/POD5/FILES"
 
-#If you already have basecalled your nanopore reads provide the folder with your nucleotide sequence files or a single file. This will skip the basecalling step. If basecalling should be done set to ""
-nseq_input: "/data/home/the/experiments/EX_THE000016/demux"
+#If you already have basecalled your nanopore reads provide the folder with your nucleotide sequence files or a single file. This will skip the basecalling step. If basecalling should be done set nseq_input to ""
+nseq_input: ""
 #If nseq_input was declared define the format of the nucleotide sequence files. This can either be "bam" or "fastq"
-nseq_format: "bam"
+nseq_format: "fastq"
+
 #Set to "YES" if you want to skip the demultiplexing step and to "NO" if your data should be demultiplexed 
-skip_demux: "YES"
+skip_demux: "NO"
 
 #basecalling configurations
 #choose a model which is used for basecalling.

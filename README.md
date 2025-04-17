@@ -53,5 +53,19 @@ NNNNNNNN
 8. After a while your results should be in snakemake_workflow/results
 9. To reset the Pipeline for another analysis run simply remove the results folder completely or move it somewhere else. Edit the configuration files accordingly for the next run.
 
+# Skipping basecalling and/or demultiplexing
+### Skipping basecalling
+If you already have basecalled reads you can specify "nseq_input" in the cfg/config.yaml and provide: 
+- a path to a single file.
+- a path to a folder containing multiple nucleotide sequence files.
+- a path to a folder containing subfolders for each barcode containing nucleotide sequence files within them.
+
+If you specify "nseq_input" you also need to set "nseq_format" to either "bam" or "fastq" depending on in which format your nucleotide sequence files are.
+
+Specifying "nseq_input" will skip basecalling automatically. If you want to do basecalling on pod5 files just set "nseq_input" to be empty "".
+
+### Skipping demultiplexing
+If you have already demultiplexed data or your data is not multiplexed you can set "skip_demux" in the cfg/config.yaml to "YES" to skip the demultiplexing step. If you want to demultiplex set "skip_demux" to "NO".
+
 # Reference Databse for Metagenomic Analysis
 The reference is the combination of multiple Orchid ITS sequences, a NCBI database combining archaeal, bacterial and fungal ITS sequences (https://www.ncbi.nlm.nih.gov/refseq/targetedloci/) and Plant ITS sequence data base PLANiTS (https://academic.oup.com/database/article/doi/10.1093/database/baz155/5722079)
