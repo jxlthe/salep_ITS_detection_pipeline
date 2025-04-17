@@ -6,6 +6,30 @@
 
 configfile: "../cfg/config.yaml"
 
+#these are the standard demux and metagenomics input when basecalling, demux and metagenomics is done.
+
+demux_input = "results/fastq/SAMPLE.pass.fq.gz"
+metagenomics_input = "results/demux/barcoding_summary.txt" 
+
+#if you want to skip demux set the input of metagenomics as the output of basecalling
+if config["skip_demux"] == "YES":
+    metagenomics_input = "results/fastq/SAMPLE.pass.fq.gz"
+elif config["skip_demux"] == "NO":
+    metagenomics_input = metagenomics_input
+else:
+    print("ERROR: skip_demux has to be set to either YES or NO")
+
+
+#if already basecalled input is given set either the demux or metagenomics input as the fastq folder.
+if config["nseq_input"] != "":
+    if config["skip_demux"] == "YES":
+        metagenomics_input = config["nseq_input"]
+    elif config["skip_demux"] == "NO":
+        demux_input = config["nseq_input"]
+    else:
+        print("ERROR: skip_demux has to be set to either YES or NO")
+
+#rules
 rule all:
     input:
         "results/metagenomics/wf-metagenomics-report.html"
@@ -31,12 +55,12 @@ rule basecall:
         "--out_dir results/fastq "
         "--output_fmt fastq "
         "--qscore_filter {params.qscore_filter} "
-        "--basecaller_cfg {params.basecaller_model}"
+        "--basecaller_cfg {params.basecaller_model} "
         "--cuda_device auto "
         "-profile singularity"
 
 rule demux:
-    input: "results/fastq/SAMPLE.pass.fq.gz"
+    input: demux_input
     output: "results/demux/barcoding_summary.txt"
     conda: "conda_env.yaml"
     shell:
@@ -59,19 +83,22 @@ rule demux:
         "done && "
         "cd ../.."
 
+#This is the command which is executed in the rule metagenomics
+metagenomics_shell_command = "mkdir -p results/metagenomics && nextflow run epi2me-labs/wf-metagenomics --out_dir ./results/metagenomics --classifier minimap2 --reference ./references/Orchids_NCBI_PLANiTS_ITS_matched_to_ref_O_N_P.fasta --ref2taxid ./references/ref2taxid.O_N_P.tsv --taxonomy ./references/new_taxdump.tar.gz --include_read_assignments -profile singularity "
+
+#if we want to skip demux and already basecalled files are given we need to add the input folder/file to the above command along with it's type (bam or fastq)
+if config["skip_demux"] == "YES":
+    if config["nseq_input"] != "":
+        metagenomics_shell_command += "--" + config["nseq_format"] + " " + config["nseq_input"] + " "
+    else:
+        metagenomics_shell_command += "--fastq results/fastq/SAMPLE.pass.fq.gz " 
+else:
+    metagenomics_shell_command += "--bam ./results/demux "
+
+
 rule metagenomics:
-    input: "results/demux/barcoding_summary.txt" 
+    input: metagenomics_input
     output: "results/metagenomics/wf-metagenomics-report.html"
     conda: "conda_env.yaml"
     shell:
-        "mkdir -p results/metagenomics && "
-        "nextflow run epi2me-labs/wf-metagenomics "
-        "--bam ./results/demux "
-        "--out_dir ./results/metagenomics "
-        "--classifier minimap2 " # use minimap and custom reference database
-        "--reference ./references/Orchids_NCBI_PLANiTS_ITS_matched_to_ref_O_N_P.fasta "
-        "--ref2taxid ./references/ref2taxid.O_N_P.tsv "
-        "--taxonomy ./references/new_taxdump.tar.gz "
-        "--include_read_assignments "
-        "-profile singularity "
-
+        metagenomics_shell_command
